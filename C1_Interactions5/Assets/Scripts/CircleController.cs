@@ -9,6 +9,9 @@ public class CircleController : MonoBehaviour
     public PlayerInput inputActions;
     private Rigidbody2D rb;
     private Camera cam;
+    private Vector2 touchStartPos;
+    private float lastTapTime;
+    private float doubleTapThreshold = 0.3f; // Time in seconds to consider a double tap
 
     [Header("Settings")]
     public float speed = 5f;
@@ -38,6 +41,15 @@ public class CircleController : MonoBehaviour
     {
         Vector2 screenPos = inputActions.TouchControls.TouchPosition.ReadValue<Vector2>();
         Vector2 worldPos = cam.ScreenToWorldPoint(screenPos);
+
+        // Check for double tap
+        if (Time.time - lastTapTime < doubleTapThreshold)
+        {
+            transform.position = worldPos;
+            Debug.Log("Double Tap Detected");
+            return;
+        }
+        lastTapTime = Time.time;
 
         StopMovement();
         StartCoroutine(MoveToPosition(worldPos));
