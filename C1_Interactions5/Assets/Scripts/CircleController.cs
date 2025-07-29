@@ -16,6 +16,7 @@ public class CircleController : MonoBehaviour
 
     [Header("Settings")]
     public float speed = 5f;
+    public float swipeForce = 300f;
 
     void Awake()
     {
@@ -65,6 +66,8 @@ public class CircleController : MonoBehaviour
             StartCoroutine(MoveToPosition(worldPos));
             Debug.Log("Tap Detected");
         }
+
+        touchStartPos = worldPos;
     }
 
     void OnPrimaryTouchCanceled(InputAction.CallbackContext context)
@@ -73,6 +76,17 @@ public class CircleController : MonoBehaviour
         {
             isDragging = false;
             return;
+        }
+
+        Vector2 screenEnd = inputActions.TouchControls.TouchPosition.ReadValue<Vector2>();
+        Vector2 worldEnd = cam.ScreenToWorldPoint(screenEnd);
+        Vector2 swipeDirection = (worldEnd - touchStartPos).normalized;
+
+        float swipeDistance = Vector2.Distance(worldEnd, touchStartPos);
+        if (swipeDistance > 0.5f)
+        {
+            rb.AddForce(swipeDirection * swipeForce);
+            Debug.Log("Swipe Detected!");
         }
     }
 
