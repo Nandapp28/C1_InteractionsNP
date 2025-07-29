@@ -11,7 +11,8 @@ public class CircleController : MonoBehaviour
     private Camera cam;
     private Vector2 touchStartPos;
     private float lastTapTime;
-    private float doubleTapThreshold = 0.3f; // Time in seconds to consider a double tap
+    private float doubleTapThreshold = 0.3f; 
+    private bool isDragging = false;
 
     [Header("Settings")]
     public float speed = 5f;
@@ -27,14 +28,14 @@ public class CircleController : MonoBehaviour
     {
         inputActions.TouchControls.Enable();
         inputActions.TouchControls.PrimaryTouch.started += OnPrimaryTouchStarted;
-        //inputActions.TouchControls.PrimaryTouch.canceled += OnPrimaryTouchCanceled;
+        inputActions.TouchControls.PrimaryTouch.canceled += OnPrimaryTouchCanceled;
     }
 
     void OnDisable()
     {
         inputActions.TouchControls.Disable();
         inputActions.TouchControls.PrimaryTouch.started -= OnPrimaryTouchStarted;
-        //inputActions.TouchControls.PrimaryTouch.canceled -= OnPrimaryTouchCanceled;
+        inputActions.TouchControls.PrimaryTouch.canceled -= OnPrimaryTouchCanceled;
     }
 
     void OnPrimaryTouchStarted(InputAction.CallbackContext context)
@@ -51,19 +52,40 @@ public class CircleController : MonoBehaviour
         }
         lastTapTime = Time.time;
 
-        StopMovement();
-        StartCoroutine(MoveToPosition(worldPos));
-        Debug.Log("Tap Detected");
+        //cek apakah menyentuh collider
+        Collider2D hit = Physics2D.OverlapPoint(worldPos);
+        if (hit != null && hit.transform == transform)
+        {
+            isDragging = true;
+        }
+        else
+        {
+            //Tap biasa
+            StopMovement();
+            StartCoroutine(MoveToPosition(worldPos));
+            Debug.Log("Tap Detected");
+        }
     }
 
     void OnPrimaryTouchCanceled(InputAction.CallbackContext context)
     {
+        if (isDragging)
+        {
+            isDragging = false;
+            return;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if (isDragging)
+        {
+            Vector2 pos = inputActions.TouchControls.TouchPosition.ReadValue<Vector2>();
+            Vector2 worldPos = cam.ScreenToWorldPoint(pos);
+            transform.position = new Vector3(worldPos.x, worldPos.y, 0);
+            Debug.Log("Dragging Detected");
+        }
     }
 
     void StopMovement()
